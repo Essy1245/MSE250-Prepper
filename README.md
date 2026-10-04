@@ -28,6 +28,7 @@ In MSE 250, exam questions are pulled directly from the course textbooks. Howeve
 * **Automatic Flagging Checkbox:** When you reveal an answer or guess incorrectly, a subtle checkbox appears:
   `[✓] Flag this question for review`
   It is checked by default so troublesome questions are automatically saved to your **Flagged Review** queue, but can be unchecked with a single tap if you don't wish to flag it.
+* **Mid-Session Exit Button:** Need to pause or switch modes? Click the `← Exit` button anytime during a session to return to the main menu. All flagged questions and current progress remain safely saved.
 
 ### 3. Syllabus Scope Whitelisting
 The master textbooks contain hundreds of extra concept questions (e.g., Set 3, Set 4, worksheets, and bonus sets) that never appear on exams. MSE 250 Prepper implements the official `examinfo.pdf` syllabus rules:
