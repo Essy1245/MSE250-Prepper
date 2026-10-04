@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSE Exam Prep Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom scrollbar for explanations */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .btn-option {
+            transition: all 0.2s ease;
+        }
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-option:active:not(:disabled) {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <main id="app-container" class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden relative min-h-[600px] flex flex-col fade-in">
+        
+        <!-- Header -->
+        <header class="bg-slate-800 text-white p-6 text-center border-b border-slate-700 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-left">MSE 250 Exam Prep</h1>
+            </div>
+            <div class="text-right text-xs text-slate-400">
+                <div>Mastered: <span id="stats-mastered" class="font-bold text-green-400">0</span></div>
+                <div>Flagged: <span id="stats-flagged" class="font-bold text-orange-400">0</span></div>
+            </div>
+        </header>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="flex-grow flex flex-col items-center justify-center p-6 sm:p-8 text-center overflow-y-auto">
+            <div class="mb-6 w-full max-w-md">
+                <svg class="w-16 h-16 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Select Study Mode</h2>
+                
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Target Material</label>
+                        <select id="exam-select" class="w-full p-3 rounded-xl border border-slate-300 bg-slate-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors">
+                            <option value="Exam 1">Exam 1 (Chapters 1-5)</option>
+                            <option value="Exam 2">Exam 2 (Chapters 6-10)</option>
+                            <option value="Exam 3">Exam 3 (Chapters 11-15)</option>
+                            <option value="Exam 4">Exam 4 (Chapters 16-20)</option>
+                            <option value="Final Exam">Final Exam (Comprehensive)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Study Mode</label>
+                        <select id="mode-select" class="w-full p-3 rounded-xl border border-slate-300 bg-slate-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors">
+                            <option value="grind">Grind Mode (Unmastered Questions)</option>
+                            <option value="mock">Mock Exam (50Q)</option>
+                            <option value="flagged">Review Flagged Questions</option>
+                            <option value="all">Practice All (Ordered)</option>
+                        </select>
+                    </div>
+                    <div id="num-questions-container">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Number of Questions</label>
+                        <input type="number" id="num-questions" class="w-full p-3 rounded-xl border border-slate-300 bg-slate-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors" value="20" min="1">
+                    </div>
+                </div>
+                
+                <!-- Dynamic Hint/Stats Box -->
+                <div id="module-hint" class="mt-5 text-sm text-slate-600 bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm text-left">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+            <button id="start-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-10 rounded-xl shadow-md transition-all duration-200 text-lg flex items-center gap-2 w-full max-w-md justify-center hover:-translate-y-0.5">
+                Start Session
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+            </button>
+            <button id="reset-data-btn" class="mt-6 text-sm text-red-500 hover:text-red-700 underline">Reset All Progress (Clear LocalStorage)</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden flex-grow flex-col h-full">
+            <div class="bg-slate-200 h-2 w-full">
+                <div id="progress-bar" class="bg-blue-600 h-2 transition-all duration-300" style="width: 0%"></div>
+            </div>
+            
+            <div class="p-6 sm:p-8 flex-grow flex flex-col">
+                <div class="flex justify-between items-center mb-6 text-sm font-semibold text-slate-500 bg-slate-100 py-2 px-4 rounded-lg">
+                    <span id="question-counter">Question 1 of X</span>
+                    <span id="global-id" class="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600">ID: --</span>
+                    <span id="score-display">Score: 0</span>
+                </div>
+
+                <div class="flex gap-4 items-start mb-6">
+                    <h3 id="question-text" class="text-xl sm:text-2xl font-semibold text-slate-800 leading-relaxed flex-grow"></h3>
+                    
+                    <!-- Flag Button -->
+                    <button id="flag-btn" class="flex-shrink-0 p-2 rounded-full hover:bg-orange-50 transition-colors group" title="Flag for review">
+                        <svg id="flag-icon" class="w-8 h-8 text-slate-300 group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                        </svg>
+                        <span class="text-[10px] block text-center font-bold text-slate-400 mt-1">FLAG</span>
+                    </button>
+                </div>
+
+                <div id="options-container" class="grid grid-cols-1 gap-3 mb-6 flex-grow">
+                    <!-- Buttons injected via JS -->
+                </div>
+
+                <div id="feedback-area" class="hidden rounded-xl p-5 mb-6 border-l-4 shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <div id="feedback-icon" class="mt-0.5"></div>
+                        <div class="w-full">
+                            <h4 id="feedback-title" class="font-bold text-lg mb-1"></h4>
+                            <p id="explanation-text" class="text-slate-700 leading-relaxed text-sm sm:text-base mt-1 mb-3"></p>
+                            
+                            <label id="auto-flag-container" class="hidden flex items-center gap-2 text-sm text-slate-600 bg-white p-2 rounded border border-slate-200 cursor-pointer hover:bg-slate-50">
+                                <input type="checkbox" id="auto-flag-cb" checked class="w-4 h-4 text-orange-500 rounded focus:ring-orange-500">
+                                Flag this question for review
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto flex justify-end gap-3">
+                    <button id="reveal-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-md">
+                        Reveal Answer
+                    </button>
+                    <button id="submit-btn" disabled class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl transition-all duration-200 shadow-md">
+                        Submit Answer
+                    </button>
+                    <button id="next-btn" class="hidden bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-8 rounded-xl transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5 shadow-md">
+                        Next Question
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden flex-grow flex-col overflow-hidden bg-slate-50 relative">
+            <div class="overflow-y-auto w-full h-full p-6 sm:p-8">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto w-full text-center">
+                    <h2 class="text-3xl font-extrabold text-slate-800 mb-2">SESSION COMPLETE</h2>
+                    
+                    <div class="relative w-32 h-32 mx-auto mb-6 mt-6">
+                        <svg class="w-full h-full" viewBox="0 0 36 36">
+                            <path class="text-slate-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="score-circle" class="text-blue-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="final-percentage" class="text-3xl font-black text-slate-800">0%</span>
+                        </div>
+                    </div>
+
+                    <p class="text-lg text-slate-700 mb-4">You got <span id="final-score" class="font-bold text-xl">0</span> out of <span id="final-total" class="font-bold text-xl">0</span> correct.</p>
+                    
+                    <div class="bg-slate-100 p-4 rounded-xl border border-slate-200 mb-8 max-w-md mx-auto">
+                        <p id="terry-message" class="text-base text-slate-700 italic font-medium">Message here</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 justify-center mb-8">
+                        <button id="menu-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 px-6 rounded-xl transition-colors duration-200">
+                            Main Menu
+                        </button>
+                        <button id="retry-incorrect-btn" class="hidden bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-colors duration-200">
+                            Grind Incorrect Only
+                        </button>
+                    </div>
+
+                    <!-- Review Section -->
+                    <div class="text-left border-t border-slate-200 pt-8 mt-4">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Attempt Review</h3>
+                        <div id="review-list" class="space-y-4">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="questions.js"></script>
+    <script>
+        const STORAGE_KEY = 'mse250_prep_data';
+
+        // App State
+        let activeQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredCurrent = false;
+        let sessionHistory = []; // Tracks user answers for review
+        let currentExamTarget = "";
+        let currentSelectedOptionIndex = null;
+        let currentSelectedOptionBtn = null;
+        let currentSelectedOptionText = "";
+
+        // DOM Elements
+        const screens = {
+            start: document.getElementById('start-screen'),
+            quiz: document.getElementById('quiz-screen'),
+            results: document.getElementById('results-screen')
+        };
+        
+        const startBtn = document.getElementById('start-btn');
+        const examSelect = document.getElementById('exam-select');
+        const modeSelect = document.getElementById('mode-select');
+        const numQuestionsContainer = document.getElementById('num-questions-container');
+        const numQuestionsInput = document.getElementById('num-questions');
+        const moduleHint = document.getElementById('module-hint');
+        const resetDataBtn = document.getElementById('reset-data-btn');
+        const flagBtn = document.getElementById('flag-btn');
+        const flagIcon = document.getElementById('flag-icon');
+        const globalIdDisplay = document.getElementById('global-id');
+        const reviewList = document.getElementById('review-list');
+        
+        const statsMastered = document.getElementById('stats-mastered');
+        const statsFlagged = document.getElementById('stats-flagged');
+
+        // Reuse previous quiz DOM references
+        const questionCounterDisplay = document.getElementById('question-counter');
+        const scoreDisplay = document.getElementById('score-display');
+        const progressBar = document.getElementById('progress-bar');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const revealBtn = document.getElementById('reveal-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const feedbackArea = document.getElementById('feedback-area');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const explanationText = document.getElementById('explanation-text');
+        const autoFlagContainer = document.getElementById('auto-flag-container');
+        const autoFlagCb = document.getElementById('auto-flag-cb');
+        const finalPercentage = document.getElementById('final-percentage');
+        const finalScore = document.getElementById('final-score');
+        const finalTotal = document.getElementById('final-total');
+        const scoreCircle = document.getElementById('score-circle');
+        const terryMessage = document.getElementById('terry-message');
+        const menuBtn = document.getElementById('menu-btn');
+        const retryIncorrectBtn = document.getElementById('retry-incorrect-btn');
+
+        function getUserData() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    // Ensure 'seen' array exists for backward compatibility with old saves
+                    if (!parsed.seen) parsed.seen = []; 
+                    return parsed;
+                }
+            } catch (e) { console.error(e); }
+            return { mastered: [], flagged: [], seen: [] };
+        }
+
+        function saveUserData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            updateHeaderStats();
+        }
+
+        function updateHeaderStats() {
+            const data = getUserData();
+            statsMastered.textContent = data.mastered.length;
+            statsFlagged.textContent = data.flagged.length;
+            updateModuleHint();
+        }
+
+        function getPoolForExam(examName) {
+            let pool = [];
+            
+            if (examName === "Exam 1") {
+                pool = globalDatabase.filter(q => q.exam === "Exam 1" && parseInt(q.id.split('_')[2]) <= 60);
+            } else if (examName === "Exam 2") {
+                pool = globalDatabase.filter(q => q.exam === "Exam 2" && q.chapter !== "Ch10" && parseInt(q.id.split('_')[2]) <= 60);
+            } else if (examName === "Exam 3") {
+                pool = globalDatabase.filter(q => q.exam === "Exam 3" && parseInt(q.id.split('_')[2]) <= 60);
+            } else if (examName === "Exam 4") {
+                let base = globalDatabase.filter(q => q.exam === "Exam 4" && parseInt(q.id.split('_')[2]) <= 60);
+                let extraIds = [
+                    "Book4_16_61", "Book4_16_62", "Book4_16_63", "Book4_16_64",
+                    "Book4_17_61", "Book4_17_65", "Book4_17_70", "Book4_17_87",
+                    "Book4_18_63", "Book4_18_65", "Book4_18_68", "Book4_18_72",
+                    "Book4_19_61", "Book4_19_63", "Book4_19_64", "Book4_19_68",
+                    "Book4_20_61", "Book4_20_62", "Book4_20_74", "Book4_20_76"
+                ];
+                let extras = globalDatabase.filter(q => extraIds.includes(q.id));
+                pool = base.concat(extras);
+            } else if (examName === "Final Exam") {
+                let base = globalDatabase.filter(q => q.exam === "Final Exam" && parseInt(q.id.split('_')[2]) <= 60);
+                let extraDict = {
+                    "Book1_1": [1,4,19,30], "Book1_2": [1,11,25,30], "Book1_3": [1,5,25,30], "Book1_4": [1,10,25,30], "Book1_5": [1,24,27,30],
+                    "Book2_6": [1,5,28,30], "Book2_7": [1,2,26,30], "Book2_8": [1,3,9,30], "Book2_9": [1,5,9,30], "Book2_10": [1,5,29,30],
+                    "Book3_11": [1,21,24,30], "Book3_12": [1,4,14,30], "Book3_13": [1,19,22,30], "Book3_14": [1,11,17,30], "Book3_15": [1,15,21,30],
+                    "Book4_16": [1,8,26,30], "Book4_17": [1,19,25,30], "Book4_18": [1,2,29,30], "Book4_19": [1,21,24,30], "Book4_20": [1,4,25,30]
+                };
+                let extraIds = [];
+                for (let prefix in extraDict) {
+                    extraDict[prefix].forEach(num => extraIds.push(prefix + "_" + num));
+                }
+                let extras = globalDatabase.filter(q => extraIds.includes(q.id));
+                pool = base.concat(extras);
+            }
+            return pool;
+        }
+
+        function updateModuleHint() {
+            if (!moduleHint) return;
+            const data = getUserData();
+            const examName = examSelect.value;
+            
+            let pool = getPoolForExam(examName);
+            
+            const total = pool.length;
+            const seenCount = pool.filter(q => data.seen.includes(q.id)).length;
+            const masteredCount = pool.filter(q => data.mastered.includes(q.id)).length;
+            const flaggedCount = pool.filter(q => data.flagged.includes(q.id)).length;
+            
+            moduleHint.innerHTML = `
+                <div class="font-bold text-blue-800 mb-2 border-b border-blue-200 pb-1">${examName} Status</div>
+                <div class="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+                    <div>Seen: <span class="font-bold text-slate-800">${seenCount} / ${total}</span></div>
+                    <div>Unseen: <span class="font-bold text-slate-500">${total - seenCount}</span></div>
+                    <div>Mastered: <span class="font-bold text-green-600">${masteredCount}</span></div>
+                    <div>Flagged: <span class="font-bold text-orange-500">${flaggedCount}</span></div>
+                </div>
+            `;
+            
+            // Toggle Number of Questions Input visibility based on mode
+            const mode = modeSelect.value;
+            if (mode === 'grind' || mode === 'all') {
+                numQuestionsContainer.style.display = 'block';
+                let maxQs = total;
+                if (mode === 'grind') {
+                    maxQs = pool.filter(q => !data.mastered.includes(q.id)).length;
+                }
+                numQuestionsInput.max = maxQs;
+                // If current input is higher than available pool, drop it down
+                if (parseInt(numQuestionsInput.value) > maxQs && maxQs > 0) {
+                    numQuestionsInput.value = maxQs;
+                }
+            } else {
+                numQuestionsContainer.style.display = 'none';
+            }
+        }
+
+        function toggleFlag() {
+            if (!activeQuestions[currentQuestionIndex]) return;
+            const qId = activeQuestions[currentQuestionIndex].id;
+            const data = getUserData();
+            
+            const isFlagged = data.flagged.includes(qId);
+            if (isFlagged) {
+                data.flagged = data.flagged.filter(id => id !== qId);
+                flagIcon.classList.remove('fill-orange-400', 'text-orange-400');
+                flagIcon.classList.add('text-slate-300');
+            } else {
+                data.flagged.push(qId);
+                flagIcon.classList.remove('text-slate-300');
+                flagIcon.classList.add('fill-orange-400', 'text-orange-400');
+            }
+            saveUserData(data);
+        }
+
+        function markMastered(qId) {
+            const data = getUserData();
+            if (!data.mastered.includes(qId)) {
+                data.mastered.push(qId);
+                saveUserData(data);
+            }
+        }
+
+        function init() {
+            updateHeaderStats();
+            updateModuleHint();
+            
+            examSelect.addEventListener('change', updateModuleHint);
+            modeSelect.addEventListener('change', updateModuleHint);
+            
+            startBtn.addEventListener('click', () => {
+                const exam = examSelect.value;
+                const mode = modeSelect.value;
+                currentExamTarget = exam;
+                startSession(exam, mode);
+            });
+            
+            submitBtn.addEventListener('click', handleAnswerSubmit);
+            revealBtn.addEventListener('click', handleRevealAnswer);
+            nextBtn.addEventListener('click', loadNextQuestion);
+            menuBtn.addEventListener('click', () => showScreen('start'));
+            
+            retryIncorrectBtn.addEventListener('click', () => {
+                const incorrectIds = sessionHistory.filter(h => !h.isCorrect).map(h => h.id);
+                const qs = globalDatabase.filter(q => incorrectIds.includes(q.id));
+                executeQuiz(qs);
+            });
+
+            resetDataBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to clear all your progress? This deletes mastered and flagged history.")) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    updateHeaderStats();
+                }
+            });
+
+            flagBtn.addEventListener('click', toggleFlag);
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+            screens[screenName].classList.add('fade-in');
+        }
+
+        function startSession(examName, mode) {
+            const data = getUserData();
+            let questionsPool = getPoolForExam(examName);
+
+            if (mode === 'grind') {
+                questionsPool = questionsPool.filter(q => !data.mastered.includes(q.id));
+                if (questionsPool.length === 0) {
+                    alert("You have mastered all available questions for this selection!");
+                    return;
+                }
+            } else if (mode === 'mock') {
+                // For Mock Exam, we shuffle and take a set amount to simulate Canvas
+                questionsPool.sort(() => Math.random() - 0.5);
+                let limit = examName === "Final Exam" ? 80 : (examName === "Exam 2" ? 40 : 50);
+                // Note: Since our mock database is small right now, cap it at available
+                limit = Math.min(limit, questionsPool.length); 
+                questionsPool = questionsPool.slice(0, limit);
+            } else if (mode === 'flagged') {
+                questionsPool = globalDatabase.filter(q => data.flagged.includes(q.id));
+                if (questionsPool.length === 0) {
+                    alert("You have no flagged questions to review!");
+                    return;
+                }
+            }
+
+            if (mode !== 'all') {
+                questionsPool.sort(() => Math.random() - 0.5); // Randomize typical study sessions
+            }
+
+            // Apply limits for modes that allow custom lengths
+            if (mode === 'grind' || mode === 'all') {
+                let limit = parseInt(numQuestionsInput.value);
+                if (isNaN(limit) || limit <= 0) limit = questionsPool.length;
+                questionsPool = questionsPool.slice(0, limit);
+            }
+
+            executeQuiz(questionsPool);
+        }
+
+        function executeQuiz(questionSet) {
+            activeQuestions = [...questionSet];
+            currentQuestionIndex = 0;
+            score = 0;
+            sessionHistory = [];
+            scoreDisplay.textContent = `Score: 0`;
+            
+            scoreCircle.setAttribute('stroke-dasharray', '0, 100');
+            scoreCircle.classList.remove('text-green-500', 'text-orange-500', 'text-red-500');
+            scoreCircle.classList.add('text-blue-500');
+
+            showScreen('quiz');
+            loadQuestionData();
+        }
+
+        function loadQuestionData() {
+            answeredCurrent = false;
+            currentSelectedOptionIndex = null;
+            currentSelectedOptionBtn = null;
+            currentSelectedOptionText = "";
+            
+            const progress = (currentQuestionIndex / activeQuestions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            questionCounterDisplay.textContent = `Question ${currentQuestionIndex + 1} of ${activeQuestions.length}`;
+            
+            const q = activeQuestions[currentQuestionIndex];
+            questionText.textContent = q.question;
+            globalIdDisplay.textContent = `ID: ${q.id}`;
+            
+            // Mark question as "seen" in LocalStorage
+            const data = getUserData();
+            if (!data.seen.includes(q.id)) {
+                data.seen.push(q.id);
+                saveUserData(data);
+            }
+            
+            // Set flag icon state
+            if (data.flagged.includes(q.id)) {
+                flagIcon.classList.add('fill-orange-400', 'text-orange-400');
+                flagIcon.classList.remove('text-slate-300');
+            } else {
+                flagIcon.classList.remove('fill-orange-400', 'text-orange-400');
+                flagIcon.classList.add('text-slate-300');
+            }
+
+            feedbackArea.classList.add('hidden');
+            autoFlagContainer.classList.add('hidden');
+            autoFlagCb.checked = true;
+            submitBtn.classList.remove('hidden');
+            revealBtn.classList.remove('hidden');
+            submitBtn.disabled = true;
+            nextBtn.classList.add('hidden');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((optionText, index) => {
+                if (!optionText) return; 
+                const btn = document.createElement('button');
+                btn.className = `btn-option w-full text-left p-4 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-medium hover:border-blue-400 focus:outline-none transition-all`;
+                
+                const letter = String.fromCharCode(65 + index);
+                btn.innerHTML = `<span class="inline-block w-8 font-bold text-slate-400 mr-2">${letter}.</span> ${optionText}`;
+                
+                btn.addEventListener('click', () => selectOption(index, btn, optionText));
+                optionsContainer.appendChild(btn);
+            });
+            
+            nextBtn.innerHTML = `Next Question <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>`;
+        }
+
+        function selectOption(index, btn, text) {
+            if (answeredCurrent) return;
+            
+            currentSelectedOptionIndex = index;
+            currentSelectedOptionBtn = btn;
+            currentSelectedOptionText = text;
+            
+            const allBtns = optionsContainer.querySelectorAll('button');
+            allBtns.forEach(b => {
+                b.classList.remove('border-blue-500', 'bg-blue-50', 'ring-1', 'ring-blue-500');
+            });
+            
+            btn.classList.add('border-blue-500', 'bg-blue-50', 'ring-1', 'ring-blue-500');
+            submitBtn.disabled = false;
+        }
+
+        function handleAnswerSubmit() {
+            if (answeredCurrent || currentSelectedOptionIndex === null) return; 
+            answeredCurrent = true;
+            submitBtn.classList.add('hidden');
+            revealBtn.classList.add('hidden');
+            
+            const q = activeQuestions[currentQuestionIndex];
+            const isCorrect = currentSelectedOptionIndex === q.correctIndex;
+            
+            // Record History for Review screen
+            sessionHistory.push({
+                id: q.id,
+                question: q.question,
+                userAnswer: currentSelectedOptionText,
+                correctAnswer: q.options[q.correctIndex],
+                isCorrect: isCorrect
+            });
+            
+            const allBtns = optionsContainer.querySelectorAll('button');
+            allBtns.forEach((btn, index) => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-blue-400', 'border-blue-500', 'bg-blue-50', 'ring-1', 'ring-blue-500');
+                
+                if (index === q.correctIndex) {
+                    btn.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                    btn.innerHTML = `<span class="inline-block w-8 font-bold text-green-600 mr-2">✓</span>` + btn.textContent.slice(2);
+                } else if (index === currentSelectedOptionIndex && !isCorrect) {
+                    btn.classList.add('border-red-400', 'bg-red-50', 'text-red-800');
+                    btn.innerHTML = `<span class="inline-block w-8 font-bold text-red-500 mr-2">✗</span>` + btn.textContent.slice(2);
+                } else {
+                    btn.classList.add('opacity-50', 'border-slate-200', 'bg-white');
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+                // If in grind mode and correct first try, mark mastered.
+                const mode = modeSelect.value;
+                if (mode === 'grind' || mode === 'all') {
+                    markMastered(q.id);
+                }
+            }
+
+            showFeedback(isCorrect, q);
+        }
+
+        function handleRevealAnswer() {
+            if (answeredCurrent) return;
+            answeredCurrent = true;
+            submitBtn.classList.add('hidden');
+            revealBtn.classList.add('hidden');
+            
+            const q = activeQuestions[currentQuestionIndex];
+            
+            // Record History as incorrect
+            sessionHistory.push({
+                id: q.id,
+                question: q.question,
+                userAnswer: "(Revealed)",
+                correctAnswer: q.options[q.correctIndex],
+                isCorrect: false
+            });
+            
+            const allBtns = optionsContainer.querySelectorAll('button');
+            allBtns.forEach((btn, index) => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-blue-400', 'border-blue-500', 'bg-blue-50', 'ring-1', 'ring-blue-500');
+                
+                if (index === q.correctIndex) {
+                    btn.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                    btn.innerHTML = `<span class="inline-block w-8 font-bold text-green-600 mr-2">✓</span>` + btn.textContent.slice(2);
+                } else {
+                    btn.classList.add('opacity-50', 'border-slate-200', 'bg-white');
+                }
+            });
+
+            showFeedback(false, q, true);
+        }
+
+        const icons = {
+            correct: `<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+            incorrect: `<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+        };
+
+        function showFeedback(isCorrect, q, isRevealed = false) {
+            feedbackArea.classList.remove('hidden', 'bg-green-50', 'bg-red-50', 'border-green-500', 'border-red-500');
+            
+            if (isCorrect) {
+                feedbackArea.classList.add('bg-green-50', 'border-green-500');
+                feedbackIcon.innerHTML = icons.correct;
+                feedbackTitle.textContent = "Correct!";
+                feedbackTitle.className = "font-bold text-lg mb-1 text-green-800";
+                explanationText.innerHTML = "Great job.";
+                autoFlagContainer.classList.add('hidden');
+            } else {
+                feedbackArea.classList.add('bg-red-50', 'border-red-500');
+                feedbackIcon.innerHTML = icons.incorrect;
+                feedbackTitle.textContent = isRevealed ? "Answer Revealed" : "Incorrect";
+                feedbackTitle.className = "font-bold text-lg mb-1 text-red-800";
+                
+                const correctText = q.options[q.correctIndex];
+                explanationText.innerHTML = `The correct answer was: <br/><span class="font-semibold text-slate-800 mt-1 block">${correctText}</span>`;
+                
+                // Show auto-flag if it's not already flagged
+                const data = getUserData();
+                if (!data.flagged.includes(q.id)) {
+                    autoFlagContainer.classList.remove('hidden');
+                    autoFlagContainer.classList.add('flex');
+                } else {
+                    autoFlagContainer.classList.add('hidden');
+                }
+            }
+            
+            nextBtn.classList.remove('hidden');
+            if (currentQuestionIndex === activeQuestions.length - 1) {
+                nextBtn.innerHTML = `View Results <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>`;
+            }
+        }
+
+        function loadNextQuestion() {
+            // Apply auto-flag if visible and checked
+            if (!autoFlagContainer.classList.contains('hidden') && autoFlagCb.checked) {
+                const qId = activeQuestions[currentQuestionIndex].id;
+                const data = getUserData();
+                if (!data.flagged.includes(qId)) {
+                    data.flagged.push(qId);
+                    saveUserData(data);
+                }
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < activeQuestions.length) {
+                loadQuestionData();
+            } else {
+                showResults();
+            }
+        }
+
+        function getTerryMessage(percentage) {
+            if (percentage === 100) return "beautiful. its all over the screen. Canvas trembles before you.";
+            if (percentage >= 90) return "YESSSS!!! you are SO CLOSE to perfection.";
+            if (percentage > 50) return "okayyy not too shabby...but yeah better go hit that grind key.";
+            if (percentage >= 20) return "bro really just guessed on half of these, try again buddy";
+            return "YIKES. dont let terry see this score. lowk embarrassing";
+        }
+
+        function buildReviewList() {
+            reviewList.innerHTML = '';
+            sessionHistory.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-xl border ${item.isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-bold text-slate-700">Q${index + 1} <span class="text-xs font-normal text-slate-500">(${item.id})</span></span>
+                        ${item.isCorrect ? '<span class="text-green-600 font-bold">✓</span>' : '<span class="text-red-500 font-bold">✗</span>'}
+                    </div>
+                    <p class="text-sm font-semibold text-slate-800 mb-2">${item.question}</p>
+                    <div class="text-xs text-slate-600 mb-1">Your Answer: <span class="${item.isCorrect ? 'text-green-700' : 'text-red-600 line-through'}">${item.userAnswer}</span></div>
+                    ${!item.isCorrect ? `<div class="text-xs font-bold text-green-700">Correct: ${item.correctAnswer}</div>` : ''}
+                `;
+                reviewList.appendChild(div);
+            });
+        }
+
+        function showResults() {
+            showScreen('results');
+            progressBar.style.width = '100%';
+            
+            finalScore.textContent = score;
+            finalTotal.textContent = activeQuestions.length;
+            
+            const percentage = activeQuestions.length > 0 ? Math.round((score / activeQuestions.length) * 100) : 0;
+            terryMessage.textContent = getTerryMessage(percentage);
+            
+            const numIncorrect = sessionHistory.filter(h => !h.isCorrect).length;
+            if (numIncorrect > 0) {
+                retryIncorrectBtn.classList.remove('hidden');
+            } else {
+                retryIncorrectBtn.classList.add('hidden');
+            }
+            
+            buildReviewList();
+            
+            let currentPercent = 0;
+            const interval = setInterval(() => {
+                finalPercentage.textContent = `${currentPercent}%`;
+                if (currentPercent >= percentage) clearInterval(interval);
+                currentPercent++;
+            }, 15);
+
+            setTimeout(() => {
+                scoreCircle.style.transition = 'stroke-dasharray 1s ease-out';
+                scoreCircle.setAttribute('stroke-dasharray', `${percentage}, 100`);
+                
+                if(percentage >= 90) scoreCircle.classList.replace('text-blue-500', 'text-green-500');
+                else if(percentage <= 50) scoreCircle.classList.replace('text-blue-500', 'text-orange-500');
+                else if(percentage < 20) scoreCircle.classList.replace('text-blue-500', 'text-red-500');
+            }, 100);
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

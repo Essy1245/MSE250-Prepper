@@ -1,0 +1,17 @@
+# Course Materials & PDFs (Confidential / Protected)
+Books/
+Fresh Exams/
+Historic Exams/
+*.pdf
+*.png
+
+# Intermediate scripts & scratch files
+scratch/
+antigravity_handoff_prompt.md
+demo.html
+
+# OS & Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
