@@ -4,6 +4,10 @@ An interactive, Quizlet-style study tool and exam simulator engineered for **MSE
 
 ---
 
+
+## AI Transparency:
+- This project was entirely driven by AI Agents. Gemini 3.8 Flash, Claude Opus 5.5, and Gemini 3.1 Pro produced all of the code and architecture. I cannot guarantee the stability nor the security of the code. 
+
 ## Overview
 
 In MSE 250, exam questions are pulled directly from the course textbooks. However, between 7 textbooks and dozens of chapters, there are nearly 2,000 concept questions in the question bank.
